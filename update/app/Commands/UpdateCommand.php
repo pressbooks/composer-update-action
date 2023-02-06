@@ -95,6 +95,10 @@ class UpdateCommand extends Command
 
         $this->repo = env('GITHUB_REPOSITORY', '');
 
+        Git::execute('config', '--global', '--add', 'safe.directory', env('GITHUB_WORKSPACE', ''));
+        Git::execute('config', '--global', '--add', 'safe.directory',
+            env('GITHUB_WORKSPACE', '').env('COMPOSER_PATH', ''));
+
         $this->base_path = env('GITHUB_WORKSPACE', '').env('COMPOSER_PATH', '');
 
         $this->parent_branch = Git::getCurrentBranchName();
@@ -175,11 +179,11 @@ class UpdateCommand extends Command
     protected function output(string $output): void
     {
         $this->out = Str::of($output)
-                        ->explode(PHP_EOL)
-                        ->filter(fn ($item) => Str::contains($item, ' - '))
-                        ->reject(fn ($item) => Str::contains($item, 'Downloading '))
-                        ->takeUntil(fn ($item) => Str::contains($item, ':'))
-                        ->implode(PHP_EOL).PHP_EOL;
+                ->explode(PHP_EOL)
+                ->filter(fn($item) => Str::contains($item, ' - '))
+                ->reject(fn($item) => Str::contains($item, 'Downloading '))
+                ->takeUntil(fn($item) => Str::contains($item, ':'))
+                ->implode(PHP_EOL).PHP_EOL;
 
         $this->line($this->out);
     }
@@ -194,8 +198,8 @@ class UpdateCommand extends Command
         $this->info('Committing changes ...');
 
         Git::addAllChanges()
-           ->commit(env('GIT_COMMIT_PREFIX', '').'composer update '.today()->toDateString().PHP_EOL.PHP_EOL.$this->out)
-           ->push(['origin', $this->new_branch]);
+            ->commit(env('GIT_COMMIT_PREFIX', '').'composer update '.today()->toDateString().PHP_EOL.PHP_EOL.$this->out)
+            ->push(['origin', $this->new_branch]);
     }
 
     /**
