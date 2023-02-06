@@ -97,7 +97,6 @@ class UpdateCommand extends Command
 
         $this->base_path = env('GITHUB_WORKSPACE', '').env('COMPOSER_PATH', '');
 
-        $this->info($this->parent_branch);
         $this->info($this->repo);
         $this->info(print_r(Git::getBranches(), true));
 
