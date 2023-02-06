@@ -93,70 +93,60 @@ class UpdateCommand extends Command
     {
         $this->info('Initializing ...');
 
-        try {
+        $this->repo = env('GITHUB_REPOSITORY', '');
 
-            $this->repo = env('GITHUB_REPOSITORY', '');
+        $this->base_path = env('GITHUB_WORKSPACE', '').env('COMPOSER_PATH', '');
 
-            $this->base_path = env('GITHUB_WORKSPACE', '').env('COMPOSER_PATH', '');
+        $this->parent_branch = Git::getCurrentBranchName();
 
-            $this->info($this->repo);
-            $this->info(print_r(Git::getBranches(), true));
+        $this->new_branch = 'cu/'.Str::random(8);
+        if (env('APP_SINGLE_BRANCH')) {
+            $this->new_branch = $this->parent_branch.env('APP_SINGLE_BRANCH_POSTFIX', '-updated');
 
-            $this->parent_branch = Git::getCurrentBranchName();
-
-            $this->info($this->parent_branch);
-
-            $this->new_branch = 'cu/'.Str::random(8);
-            if (env('APP_SINGLE_BRANCH')) {
-                $this->new_branch = $this->parent_branch.env('APP_SINGLE_BRANCH_POSTFIX', '-updated');
-
-                $this->info('Using single-branch approach. Branch name: "'.$this->new_branch.'"');
-            }
-
-            $token = env('GITHUB_TOKEN');
-
-            GitHub::authenticate($token, AuthMethod::ACCESS_TOKEN);
-
-            Git::setRemoteUrl(
-                'origin',
-                "https://{$token}@github.com/{$this->repo}.git"
-            );
-
-            Git::execute('config', '--local', 'user.name', env('GIT_NAME', 'cu'));
-            Git::execute('config', '--local', 'user.email', env('GIT_EMAIL', 'cu@composer-update'));
-
-            $this->info('Fetching from remote.');
-
-            Git::fetch('origin');
-
-            if (
-                ! env('APP_SINGLE_BRANCH')
-                || ! in_array('remotes/origin/'.$this->new_branch, Git::getBranches() ?? [])
-            ) {
-                $this->info('Creating branch "'.$this->new_branch.'".');
-
-                Git::createBranch($this->new_branch, true);
-            } elseif (env('APP_SINGLE_BRANCH')) {
-                $this->info('Checking out branch "'.$this->new_branch.'".');
-
-                Git::checkout($this->new_branch);
-
-                $this->info('Pulling from origin.');
-
-                Git::pull('origin');
-
-                $this->info('Merging from "'.$this->parent_branch.'".');
-
-                Git::merge($this->parent_branch, [
-                    '--strategy-option=theirs',
-                    '--quiet',
-                ]);
-            }
-
-            $this->token();
-        } catch (GitException $e) {
-            $this->error($e->getRunnerResult()->toText()); // @codeCoverageIgnore
+            $this->info('Using single-branch approach. Branch name: "'.$this->new_branch.'"');
         }
+
+        $token = env('GITHUB_TOKEN');
+
+        GitHub::authenticate($token, AuthMethod::ACCESS_TOKEN);
+
+        Git::setRemoteUrl(
+            'origin',
+            "https://{$token}@github.com/{$this->repo}.git"
+        );
+
+        Git::execute('config', '--local', 'user.name', env('GIT_NAME', 'cu'));
+        Git::execute('config', '--local', 'user.email', env('GIT_EMAIL', 'cu@composer-update'));
+
+        $this->info('Fetching from remote.');
+
+        Git::fetch('origin');
+
+        if (
+            ! env('APP_SINGLE_BRANCH')
+            || ! in_array('remotes/origin/'.$this->new_branch, Git::getBranches() ?? [])
+        ) {
+            $this->info('Creating branch "'.$this->new_branch.'".');
+
+            Git::createBranch($this->new_branch, true);
+        } elseif (env('APP_SINGLE_BRANCH')) {
+            $this->info('Checking out branch "'.$this->new_branch.'".');
+
+            Git::checkout($this->new_branch);
+
+            $this->info('Pulling from origin.');
+
+            Git::pull('origin');
+
+            $this->info('Merging from "'.$this->parent_branch.'".');
+
+            Git::merge($this->parent_branch, [
+                '--strategy-option=theirs',
+                '--quiet',
+            ]);
+        }
+
+        $this->token();
     }
 
     /**
