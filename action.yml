@@ -1,7 +1,7 @@
 # action.yml
 name: 'composer update action'
 description: 'composer update and create pull request'
-author: 'pressbooks'
+author: 'kawax'
 runs:
   using: 'docker'
   image: 'Dockerfile'
