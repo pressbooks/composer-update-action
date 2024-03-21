@@ -9,7 +9,7 @@ class PackagesUpdate
 {
     public function __invoke(string $path): string
     {
-	$packages = explode(' ', env('COMPOSER_PACKAGES'));
+	    $packages = explode(' ', env('COMPOSER_PACKAGES'));
 
         $cmd = array_merge(['composer', 'update'], $packages, [
             '--with-dependencies',
