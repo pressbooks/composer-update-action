@@ -9,16 +9,15 @@ class PackagesUpdate
 {
     public function __invoke(string $path): string
     {
-        $cmd = [
-            'composer',
-            'update',
-            env('COMPOSER_PACKAGES'),
+	$packages = explode(' ', env('COMPOSER_PACKAGES'));
+
+        $cmd = array_merge(['composer', 'update'], $packages, [
             '--with-dependencies',
             '--no-interaction',
             '--no-progress',
             '--no-autoloader',
             '--no-scripts',
-        ];
+        ]);
 
         /** @var ProcessResult $result */
         $result = Process::composer($path)->run($cmd);
